@@ -10,41 +10,84 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f8fafc; }
-        .anti-curang { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
-        .blur-ekstrem { filter: blur(15px); pointer-events: none; opacity: 0.5; transition: all 0.2s ease-in-out; }
-        #peringatan-curang { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(220, 38, 38, 0.9); color: white; padding: 20px 40px; border-radius: 10px; font-size: 24px; font-weight: bold; z-index: 9999; text-align: center; }
-        .blur-ekstrem ~ #peringatan-curang { display: block; }
+        
+        /* 1. CSS ANTI COPY PASTE & SELEKSI TEKS */
+        .anti-curang {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* 2. EFEK BLUR SAAT LAYAR HILANG FOKUS (ANTI SNIPPING TOOL / PINDAH TAB) */
+        .blur-ekstrem {
+            filter: blur(15px);
+            pointer-events: none;
+            opacity: 0.5;
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Notifikasi Peringatan Blur */
+        #peringatan-curang {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(220, 38, 38, 0.9);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 9999;
+            text-align: center;
+        }
+        .blur-ekstrem ~ #peringatan-curang {
+            display: block;
+        }
     </style>
 </head>
 <body class="anti-curang">
     <div id="root"></div>
     <div id="peringatan-curang">DILARANG PINDAH TAB ATAU MENYONTEK! ⚠️</div>
 
+    <!-- SCRIPT ANTI CURANG JAVASCRIPT -->
     <script>
+        // 1. Matikan Klik Kanan
         document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        // 2. Matikan Shortcut Copy, Cut, Paste
         document.addEventListener('copy', event => event.preventDefault());
         document.addEventListener('cut', event => event.preventDefault());
         document.addEventListener('paste', event => event.preventDefault());
+
+        // 3. Matikan F12, Ctrl+U (Source), Ctrl+Shift+I (Inspect), Ctrl+P (Print)
         document.addEventListener('keydown', function(e) {
             if (e.key === 'F12' || e.keyCode === 123) e.preventDefault();
             if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.keyCode === 73)) e.preventDefault();
             if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.keyCode === 67)) e.preventDefault();
             if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.keyCode === 74)) e.preventDefault();
             if (e.ctrlKey && (e.key === 'U' || e.keyCode === 85)) e.preventDefault();
-            if (e.ctrlKey && (e.key === 'P' || e.keyCode === 80)) e.preventDefault(); 
+            if (e.ctrlKey && (e.key === 'P' || e.keyCode === 80)) e.preventDefault(); // Anti Print
         });
+
+        // 4. Sensor Fokus Layar (Anti Snipping Tool / Pindah Tab ke Google)
         document.addEventListener("visibilitychange", () => {
             const rootDiv = document.getElementById("root");
             if (document.hidden) {
+                // Saat user buka tab lain atau tool screenshot, layar dikaburkan
                 rootDiv.classList.add('blur-ekstrem');
                 document.title = "⚠️ JANGAN MENYONTEK!";
             } else {
+                // Saat kembali ke layar ujian, blur dihilangkan
                 rootDiv.classList.remove('blur-ekstrem');
                 document.title = "CBT UKOM Ners - Premium V3";
             }
@@ -54,13 +97,16 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
+        // ==========================================
+        // KONFIGURASI FIREBASE ANDA (WAJIB DIISI)
+        // ==========================================
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyB4g2wzad4TbO8ayXPn_HDdYJ2TmQ8E-es",
+            authDomain: "ukom-ners-id.firebaseapp.com",
+            projectId: "ukom-ners-id",
+            storageBucket: "ukom-ners-id.firebasestorage.app",
+            messagingSenderId: "939844893256",
+            appId: "1:939844893256:web:0ec0a9b26c7aadf50cb67d"
         };
 
         const isConfigured = firebaseConfig.apiKey !== "YOUR_API_KEY";
@@ -71,8 +117,389 @@
             db = firebase.firestore();
         }
 
+        // ==========================================
+        // DATA SOAL (PASTE 180 SOAL ANDA DI SINI NANTI)
+        // ==========================================
         const quizData = [
             { category: "Kep. Medikal Bedah", q: "Laki-laki (55 th) asma bronkial mengeluh sesak napas. Terdengar wheezing, batuk dahak kental. Masalah utama?", opts: ["Pola napas tidak efektif", "Bersihan jalan napas tidak efektif", "Gangguan pertukaran gas", "Penurunan curah jantung", "Risiko aspirasi"], ans: 1, rationale: "Dahak kental dan wheezing adalah tanda mayor bersihan jalan napas tidak efektif." },
             { category: "Kep. Anak", q: "Bayi (9 bln) belum pernah diimunisasi Campak. Lokasi injeksi yang tepat?", opts: ["Intrakutan lengan kanan", "Subkutan lengan kiri atas", "Intramuskular paha", "Subkutan paha", "Peroral"], ans: 1, rationale: "Vaksin Campak (MR) diberikan subkutan di lengan kiri atas (muskulus deltoideus)." },
             { category: "Kep. Maternitas", q: "Ibu post partum, darah membasahi 2 pembalut/jam, uterus teraba lembek. Tindakan pertama?", opts: ["Pasang infus", "Masase fundus uteri", "Pasang kateter", "Beri oksitosin", "Observasi TTV"], ans: 1, rationale: "Uterus lembek = atonia uteri. Masase fundus merangsang kontraksi dengan cepat." }
         ];
+
+        // --- Komponen Ikon SVG ---
+        const Icons = {
+            Google: () => <svg className="w-5 h-5 mr-2" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/><path fill="#FF3D00" d="m6.306 14.691 6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571.001-.001.002-.001.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/></svg>,
+            Check: () => <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>,
+            User: () => <svg className="w-16 h-16 text-blue-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>,
+            Lock: () => <svg className="w-16 h-16 text-green-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" strokeWidth="2"></rect><path strokeWidth="2" d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>,
+            Target: () => <svg className="w-16 h-16 text-green-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth="2"></circle><circle cx="12" cy="12" r="6" strokeWidth="2"></circle><circle cx="12" cy="12" r="2" strokeWidth="2"></circle></svg>,
+            Key: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+        };
+
+        function App() {
+            const [user, setUser] = useState(null);
+            const [userData, setUserData] = useState(null);
+            const [appState, setAppState] = useState("loading"); 
+            const [inputCode, setInputCode] = useState("");
+            const [errorMsg, setErrorMsg] = useState("");
+            const [formData, setFormData] = useState({ nama: "", univ: "", ukom_status: "Pertama Kali", jenjang: "Ners", tgl_ukom: "" });
+            const [currentIdx, setCurrentIdx] = useState(0);
+            const [answers, setAnswers] = useState({});
+            const [displayTime, setDisplayTime] = useState("180:00");
+            const [isSaving, setIsSaving] = useState(false);
+
+            useEffect(() => {
+                if (!isConfigured) return setAppState("error_config");
+                const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+                    if (currentUser) {
+                        setUser(currentUser);
+                        checkUserStatus(currentUser.uid, currentUser.email);
+                    } else {
+                        setUser(null);
+                        setAppState("login");
+                    }
+                });
+                return () => unsubscribe();
+            }, []);
+
+            const checkUserStatus = async (uid, email) => {
+                setAppState("loading");
+                try {
+                    const doc = await db.collection("peserta_ukom").doc(uid).get();
+                    if (!doc.exists) {
+                        setAppState("code"); 
+                    } else {
+                        const data = doc.data();
+                        setUserData(data);
+                        
+                        if (!data.nama) setAppState("register");
+                        else if (data.exam_status === "in_progress") {
+                            setAnswers(data.answers || {});
+                            setAppState("testing");
+                        }
+                        else if (data.exam_status === "finished") setAppState("history");
+                        else setAppState("greeting");
+                    }
+                } catch (e) {
+                    setErrorMsg("Koneksi gagal.");
+                }
+            };
+
+            const loginGoogle = async () => {
+                setAppState("loading");
+                try {
+                    await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+                } catch (e) {
+                    setAppState("login");
+                    setErrorMsg("Login gagal atau dibatalkan.");
+                }
+            };
+
+            const submitCode = async () => {
+                setErrorMsg("");
+                if (!inputCode) return setErrorMsg("Kode tidak boleh kosong.");
+                
+                setAppState("loading");
+                const kodeUpper = inputCode.toUpperCase();
+                
+                try {
+                    const voucherRef = db.collection("voucher_akses").doc(kodeUpper);
+                    const doc = await voucherRef.get();
+                    
+                    if (doc.exists && doc.data().status === "tersedia") {
+                        await voucherRef.update({
+                            status: "terpakai",
+                            dipakai_oleh: user.email,
+                            waktu_pakai: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        await db.collection("peserta_ukom").doc(user.uid).set({
+                            email: user.email,
+                            kode_akses: kodeUpper,
+                            exam_status: "not_started",
+                            review_count: 0
+                        });
+                        setAppState("register");
+                    } else {
+                        setAppState("code");
+                        setErrorMsg("Kode Referral tidak valid atau sudah digunakan.");
+                    }
+                } catch (error) {
+                    setAppState("code");
+                    setErrorMsg("Terjadi gangguan jaringan saat mengecek kode.");
+                }
+            };
+
+            const saveProfile = async (e) => {
+                e.preventDefault();
+                setAppState("loading");
+                await db.collection("peserta_ukom").doc(user.uid).update(formData);
+                setUserData({ ...userData, ...formData });
+                setAppState("greeting");
+            };
+
+            const startExam = async () => {
+                setAppState("loading");
+                const endTime = Date.now() + (180 * 60 * 1000); // 180 menit riil
+                await db.collection("peserta_ukom").doc(user.uid).update({ 
+                    exam_status: "in_progress",
+                    end_time: endTime 
+                });
+                setUserData({ ...userData, exam_status: "in_progress", end_time: endTime });
+                setAppState("testing");
+            };
+
+            useEffect(() => {
+                let interval;
+                if (appState === "testing" && userData?.end_time) {
+                    interval = setInterval(() => {
+                        const now = Date.now();
+                        const sisaMiliDetik = userData.end_time - now;
+                        
+                        if (sisaMiliDetik <= 0) {
+                            clearInterval(interval);
+                            finishExam(); 
+                        } else {
+                            const secs = Math.floor(sisaMiliDetik / 1000);
+                            const h = Math.floor(secs / 3600);
+                            const m = Math.floor((secs % 3600) / 60);
+                            const s = secs % 60;
+                            setDisplayTime(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+                        }
+                    }, 1000);
+                }
+                return () => clearInterval(interval);
+            }, [appState, userData]);
+
+            const handleAnswer = async (qIdx, optIdx) => {
+                const newAnswers = { ...answers, [qIdx]: optIdx };
+                setAnswers(newAnswers);
+                setIsSaving(true);
+                
+                try {
+                    await db.collection("peserta_ukom").doc(user.uid).update({ answers: newAnswers });
+                    setIsSaving(false);
+                } catch (e) {
+                    setIsSaving(false); // Graceful offline, data tersimpan di state React
+                }
+            };
+
+            const finishExam = async () => {
+                setAppState("loading");
+                try {
+                    await db.collection("peserta_ukom").doc(user.uid).update({
+                        exam_status: "finished",
+                        answers: answers
+                    });
+                    setUserData({ ...userData, exam_status: "finished", answers: answers });
+                    setAppState("history");
+                } catch (e) {
+                    alert("Koneksi buruk. Pastikan internet menyala lalu kumpulkan lagi.");
+                    setAppState("testing");
+                }
+            };
+
+            const openReview = async () => {
+                const currentCount = userData.review_count || 0;
+                if (currentCount >= 5) return alert("Akses pembahasan maksimal (5 kali) telah habis.");
+                await db.collection("peserta_ukom").doc(user.uid).update({ review_count: currentCount + 1 });
+                setUserData({ ...userData, review_count: currentCount + 1 });
+                setAppState("review");
+            };
+
+            const getScore = () => {
+                let correct = 0;
+                quizData.forEach((q, i) => { if (answers[i] === q.ans) correct++; });
+                return correct;
+            };
+
+            // --- LAYAR RENDER ---
+            
+            if (appState === "error_config") return <div className="p-10 text-center"><h1 className="text-2xl text-red-600 font-bold">Harap Masukkan Konfigurasi Firebase!</h1></div>;
+            if (appState === "loading") return <div className="flex h-screen items-center justify-center bg-gray-50"><div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600"></div></div>;
+
+            if (appState === "login") return (
+                <div className="flex h-screen items-center justify-center p-4">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center border">
+                        <Icons.User />
+                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Login CBT Ners</h1>
+                        <p className="text-gray-500 mb-8 text-sm">Masuk menggunakan email Google Anda yang aktif.</p>
+                        {errorMsg && <p className="text-red-500 mb-4 text-sm font-semibold">{errorMsg}</p>}
+                        <button onClick={loginGoogle} className="w-full border-2 border-gray-200 py-3 rounded-xl hover:bg-gray-50 flex justify-center items-center font-bold text-gray-700 transition">
+                            <Icons.Google /> Masuk dengan Gmail
+                        </button>
+                    </div>
+                </div>
+            );
+
+            if (appState === "code") return (
+                <div className="flex h-screen items-center justify-center p-4">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center border">
+                        <Icons.Lock />
+                        <h1 className="text-2xl font-bold text-gray-800 mb-2">Aktivasi Premium</h1>
+                        <p className="text-gray-500 mb-6 text-sm">Masukkan kode Voucher / Akses yang Anda terima dari Admin.</p>
+                        {errorMsg && <p className="bg-red-50 text-red-600 py-2 px-3 rounded-lg mb-4 text-sm font-semibold">{errorMsg}</p>}
+                        <input type="text" value={inputCode} onChange={e => setInputCode(e.target.value)} placeholder="KODE VOUCHER" className="w-full p-4 border-2 border-gray-300 rounded-xl mb-4 uppercase text-center font-black text-xl focus:border-green-500 outline-none" />
+                        <button onClick={submitCode} className="w-full bg-green-600 text-white font-bold py-3 rounded-xl hover:bg-green-700 shadow-md transition">Verifikasi Kode</button>
+                        <button onClick={() => auth.signOut()} className="mt-4 text-sm text-gray-400 hover:text-gray-800 underline">Ganti Akun</button>
+                    </div>
+                </div>
+            );
+
+            if (appState === "register") return (
+                <div className="min-h-screen p-4 py-10 flex items-center justify-center">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border-t-8 border-green-500">
+                        <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg font-bold mb-6 text-sm text-center">Akses Premium Terbuka!</div>
+                        <h1 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Lengkapi Data Diri</h1>
+                        <form onSubmit={saveProfile} className="space-y-4">
+                            <div><label className="block text-sm font-bold text-gray-700 mb-1">Nama Lengkap & Gelar</label><input required type="text" value={formData.nama} onChange={e=>setFormData({...formData, nama: e.target.value})} className="w-full p-3 border rounded-xl" /></div>
+                            <div><label className="block text-sm font-bold text-gray-700 mb-1">Asal Universitas</label><input required type="text" value={formData.univ} onChange={e=>setFormData({...formData, univ: e.target.value})} className="w-full p-3 border rounded-xl" /></div>
+                            <div><label className="block text-sm font-bold text-gray-700 mb-1">Jenjang Pendidikan</label><select value={formData.jenjang} onChange={e=>setFormData({...formData, jenjang: e.target.value})} className="w-full p-3 border rounded-xl bg-white"><option>D3 Keperawatan</option><option>S1 Keperawatan</option><option>Profesi Ners</option></select></div>
+                            <div><label className="block text-sm font-bold text-gray-700 mb-1">Pengalaman UKOM</label><select value={formData.ukom_status} onChange={e=>setFormData({...formData, ukom_status: e.target.value})} className="w-full p-3 border rounded-xl bg-white"><option>Ini Pertama Kali</option><option>Sudah Pernah (Retaker)</option></select></div>
+                            <button type="submit" className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl mt-4 hover:bg-blue-700 shadow-md">Simpan Profil & Lanjut</button>
+                        </form>
+                    </div>
+                </div>
+            );
+
+            if (appState === "greeting") return (
+                <div className="flex h-screen items-center justify-center p-4">
+                    <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full text-center relative">
+                        <button onClick={() => auth.signOut()} className="absolute top-4 right-4 text-xs font-bold text-gray-400 hover:text-red-500">Keluar</button>
+                        <h1 className="text-3xl font-black text-blue-700 mb-2">Halo, {userData?.nama}! 👋</h1>
+                        <p className="text-gray-600 mb-2">Sejawat Hebat dari <b>{userData?.univ}</b></p>
+                        
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5 my-6 text-sm text-left text-yellow-800">
+                            <p className="mb-2 font-bold">⚠️ Tata Tertib Ujian Premium (Anti-Curang):</p>
+                            <ul className="list-disc pl-5 space-y-2">
+                                <li>Durasi: <b>180 Menit</b> (Waktu tidak akan berhenti walau web ditutup).</li>
+                                <li>Dilarang membuka tab/aplikasi lain. Layar akan otomatis terkunci/blur.</li>
+                                <li>Dilarang melakukan seleksi teks, copy-paste, atau klik kanan.</li>
+                            </ul>
+                        </div>
+                        
+                        <button onClick={startExam} className="w-full bg-blue-600 text-white font-bold py-4 text-lg rounded-xl hover:bg-blue-700 shadow-lg">Mulai Kerjakan Soal CBT</button>
+                    </div>
+                </div>
+            );
+
+            if (appState === "testing") {
+                const q = quizData[currentIdx];
+                return (
+                    <div className="flex flex-col h-screen bg-gray-50">
+                        <header className="bg-white shadow-sm flex items-center justify-between p-4 border-b select-none">
+                            <div className="flex items-center gap-3">
+                                <span className="font-bold text-gray-700 hidden md:block">UKOM CBT - {userData?.nama}</span>
+                                {isSaving ? <span className="text-xs text-yellow-600 font-bold bg-yellow-100 px-2 py-1 rounded">Menyimpan...</span> : <span className="text-xs text-green-600 font-bold bg-green-100 px-2 py-1 rounded">Tersimpan</span>}
+                            </div>
+                            <div className="bg-blue-100 text-blue-800 px-5 py-2 rounded-full font-mono font-black text-lg tracking-wider border border-blue-200">{displayTime}</div>
+                            <button onClick={() => {if(window.confirm("Yakin ingin mengumpulkan ujian?")) finishExam()}} className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg font-bold text-sm shadow">Selesai</button>
+                        </header>
+                        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+                            <div className="bg-white rounded-xl shadow border p-6 md:p-10 max-w-4xl mx-auto">
+                                <div className="flex justify-between items-center border-b pb-4 mb-6 select-none">
+                                    <span className="text-xs font-bold bg-blue-50 text-blue-600 px-3 py-1 rounded-full uppercase">{q.category}</span>
+                                    <span className="text-gray-400 font-bold text-sm">Soal {currentIdx + 1} dari {quizData.length}</span>
+                                </div>
+                                <div className="text-lg md:text-xl text-gray-800 leading-relaxed mb-8 whitespace-pre-line font-medium">{q.q}</div>
+                                <div className="space-y-3">
+                                    {q.opts.map((opt, i) => {
+                                        const sel = answers[currentIdx] === i;
+                                        return (
+                                            <label key={i} onClick={() => handleAnswer(currentIdx, i)} className={`flex items-start p-4 border rounded-xl cursor-pointer transition ${sel ? 'bg-blue-50 border-blue-500 ring-2 ring-blue-500' : 'hover:bg-gray-50 border-gray-200'}`}>
+                                                <input type="radio" checked={sel} readOnly className="mt-1 w-5 h-5 text-blue-600" />
+                                                <span className="ml-3 text-gray-700 font-medium"><span className="font-bold mr-2 text-gray-400">{String.fromCharCode(65+i)}.</span> {opt}</span>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                            <div className="mt-6 flex justify-between max-w-4xl mx-auto pb-6 select-none">
+                                <button disabled={currentIdx === 0} onClick={() => setCurrentIdx(p => p - 1)} className="px-6 py-3 bg-white border rounded-xl text-gray-700 disabled:opacity-50 font-semibold hover:bg-gray-50 transition">Soal Sebelumnya</button>
+                                {currentIdx === quizData.length - 1 ? 
+                                    <button onClick={() => {if(window.confirm("Kumpulkan jawaban?")) finishExam()}} className="px-6 py-3 bg-green-600 text-white rounded-xl font-bold shadow hover:bg-green-700 transition">Kumpulkan Jawaban</button> :
+                                    <button onClick={() => setCurrentIdx(p => p + 1)} className="px-6 py-3 bg-blue-600 text-white rounded-xl font-bold shadow hover:bg-blue-700 transition">Soal Selanjutnya</button>
+                                }
+                            </div>
+                        </main>
+                    </div>
+                );
+            }
+
+            if (appState === "history") {
+                const correct = getScore();
+                const reviewCount = userData?.review_count || 0;
+                return (
+                    <div className="flex h-screen items-center justify-center p-4 bg-gray-50">
+                        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
+                            <button onClick={() => auth.signOut()} className="absolute top-4 right-4 text-xs font-bold text-red-500">Keluar Akun</button>
+                            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Sertifikat Hasil Ujian</h2>
+                            <h1 className="text-2xl font-black text-gray-800 mb-6">{userData?.nama}</h1>
+                            
+                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-3xl mb-8 border border-blue-200">
+                                <span className="block text-sm font-bold text-blue-500 uppercase mb-2">Nilai Kelulusan Anda</span>
+                                <span className="text-7xl font-black text-blue-700 drop-shadow-sm">{Math.round((correct/quizData.length)*100)}</span>
+                                <div className="mt-4 inline-block bg-white px-4 py-1 rounded-full text-sm font-bold text-gray-600 shadow-sm border border-gray-100">Benar {correct} / {quizData.length} Soal</div>
+                            </div>
+
+                            <div className="flex justify-between items-center px-4 py-3 bg-gray-50 rounded-xl mb-4 border border-gray-100">
+                                <span className="text-sm font-semibold text-gray-600">Akses Pembahasan</span>
+                                <span className={`text-sm font-bold ${reviewCount >= 5 ? "text-red-500" : "text-green-600"}`}>Terpakai {reviewCount}/5</span>
+                            </div>
+                            
+                            <button onClick={openReview} disabled={reviewCount >= 5} className="w-full flex items-center justify-center gap-2 bg-gray-800 text-white font-bold py-4 rounded-xl hover:bg-black transition disabled:bg-gray-300 disabled:text-gray-500">
+                                <Icons.Book /> Lihat Pembahasan Soal
+                            </button>
+                            {reviewCount >= 5 && <p className="text-xs font-bold text-red-500 mt-3">Batas akses pembahasan telah habis.</p>}
+                        </div>
+                    </div>
+                );
+            }
+
+            if (appState === "review") {
+                const q = quizData[currentIdx];
+                const uAns = userData?.answers?.[currentIdx];
+                return (
+                    <div className="flex flex-col h-screen bg-gray-50">
+                        <header className="bg-white shadow flex items-center p-4 border-b select-none">
+                            <button onClick={() => {setAppState('history'); setCurrentIdx(0);}} className="text-gray-600 font-semibold hover:text-gray-900 transition">&larr; Kembali ke Hasil Skor</button>
+                            <h1 className="font-bold text-lg mx-auto text-blue-800">Mode Pembahasan</h1>
+                        </header>
+                        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+                            <div className="bg-white rounded-xl shadow-sm border p-6 md:p-10 max-w-4xl mx-auto">
+                                <div className="mb-4 text-xs font-bold bg-blue-50 text-blue-600 px-3 py-1 rounded-full inline-block uppercase">{q.category}</div>
+                                <div className="text-lg md:text-xl mb-6 font-medium text-gray-800">{q.q}</div>
+                                <div className="space-y-3 mb-8">
+                                    {q.opts.map((opt, i) => {
+                                        const isCorr = i === q.ans;
+                                        const isUser = i === uAns;
+                                        let css = "border-gray-200 text-gray-500 bg-gray-50";
+                                        if (isCorr) css = "bg-green-50 border-green-500 text-green-900 shadow-sm ring-1 ring-green-500";
+                                        else if (isUser) css = "bg-red-50 border-red-300 text-red-900";
+                                        return (
+                                            <div key={i} className={`flex justify-between items-center p-4 border rounded-xl ${css}`}>
+                                                <span className="font-medium"><span className="font-bold mr-3 opacity-50">{String.fromCharCode(65+i)}.</span>{opt}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                                    <h4 className="font-black text-blue-800 mb-2 uppercase text-sm tracking-wider">Rasional / Pembahasan:</h4>
+                                    <p className="text-blue-900 leading-relaxed font-medium">{q.rationale}</p>
+                                </div>
+                            </div>
+                            <div className="mt-6 flex justify-between max-w-4xl mx-auto pb-8 select-none">
+                                <button disabled={currentIdx === 0} onClick={() => setCurrentIdx(p => p - 1)} className="px-6 py-3 bg-white border rounded-xl text-gray-700 disabled:opacity-50 font-bold hover:bg-gray-50 transition">Soal Sebelumnya</button>
+                                <button disabled={currentIdx === quizData.length - 1} onClick={() => setCurrentIdx(p => p + 1)} className="px-6 py-3 bg-gray-800 text-white rounded-xl font-bold disabled:opacity-50 hover:bg-black transition">Soal Selanjutnya</button>
+                            </div>
+                        </main>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
